@@ -1,0 +1,22 @@
+Real name: nkxrb
+Email address: w626023781@163.com
+You selected this USER-ID:
+    "nkxrb <w626023781@163.com>"
+
+Change (N)ame, (E)mail, or (O)kay/(Q)uit? o
+We need to generate a lot of random bytes. It is a good idea to perform
+some other action (type on the keyboard, move the mouse, utilize the
+disks) during the prime generation; this gives the random number
+generator a better chance to gain enough entropy.
+We need to generate a lot of random bytes. It is a good idea to perform
+some other action (type on the keyboard, move the mouse, utilize the
+disks) during the prime generation; this gives the random number
+generator a better chance to gain enough entropy.
+gpg: key 7EB05F853314621C marked as ultimately trusted
+gpg: revocation certificate stored as 'C:/Users/一/AppData/Roaming/gnupg/openpgp-revocs.d\0527BC73796DC0F100F601497EB05F853314621C.rev'
+public and secret key created and signed.
+
+pub   rsa2048 2019-09-06 [SC] [expires: 2021-09-05]
+      0527BC73796DC0F100F601497EB05F853314621C
+uid                      nkxrb <w626023781@163.com>
+sub   rsa2048 2019-09-06 [E] [expires: 2021-09-05]

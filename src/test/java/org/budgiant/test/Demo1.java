@@ -1,4 +1,4 @@
-package com.md1k.test;
+package org.budgiant.test;
 
 /**
  * @author vvk

@@ -1,4 +1,4 @@
-package com.md1k.services.common.utils;
+package org.budgiant.common.utils;
 
 import org.apache.poi.hssf.usermodel.*;
 import org.apache.poi.hssf.util.HSSFColor;
@@ -10,20 +10,31 @@ import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+/**
+ * Excel报表生成、解析、压缩打包等功能合集
+ *
+ * @author nkxrb
+ * @since 2019/10/01
+ */
 public class ExcelUtil {
-
-    // 默认上传的地址
-//    private static String excelTempPath = InitData.properties.getExcelFileDir();
+    /**
+     * 私有化构造，禁止实例化
+     */
+    private ExcelUtil() {
+    }
 
     /**
      * 报表解析
      *
      * @param file xls文件
-     * @return
+     * @return List xls文件数据集合
      */
     public static List<Map<Integer, String>> parseExcelFile(File file) {
         List<Map<Integer, String>> list = new ArrayList<Map<Integer, String>>();
@@ -56,10 +67,10 @@ public class ExcelUtil {
      * 报表解析
      *
      * @param workBook 工作簿对象
-     * @return
+     * @return List xls文件数据集合
      */
     public static List<Map<Integer, String>> parseExcelWorkBook(Workbook workBook) {
-        List<Map<Integer, String>> list = new ArrayList<Map<Integer, String>>();
+        List<Map<Integer, String>> list = new ArrayList<>();
         Map<Integer, String> map = null;
         Sheet sheet = null;
         Row row = null;
@@ -92,10 +103,12 @@ public class ExcelUtil {
 
     /**
      * 获取默认边框样式
-     * @param workbook
-     * @return
+     *
+     * @param workbook workbook对象
+     * @param align    居中
+     * @return HSSFCellStyle
      */
-    public static HSSFCellStyle getContentStyle(HSSFWorkbook workbook,short align) {
+    private static HSSFCellStyle getContentStyle(HSSFWorkbook workbook, short align) {
         // 内容
         HSSFCellStyle fontStyle2 = workbook.createCellStyle();
         HSSFFont font2 = workbook.createFont();
@@ -111,27 +124,26 @@ public class ExcelUtil {
     }
 
     /**
-     * 根据excel模板名称获取workbook对象
-     * @param tempName
-     * @return
+     * 根据excel模板绝对路径获取workbook对象
+     *
+     * @param tempName excel模板绝对路径
+     * @return HSSFWorkbook
      */
-    public static HSSFWorkbook getWorkbookByTemp(String tempName){
+    public static HSSFWorkbook getWorkbookByTemp(String tempName) {
         InputStream fis = null;
         HSSFWorkbook wb = null;
         File file = new File(tempName);
         try {
-            if(!file.exists()){
+            if (!file.exists()) {
+                boolean b = file.mkdirs();
                 file = new File(tempName);
-                if(!file.exists()){
-                    file.mkdirs();
-                }
             }
             fis = new FileInputStream(file);
             wb = new HSSFWorkbook(fis);
         } catch (IOException e) {
             e.printStackTrace();
-        }finally {
-            if(fis!=null){
+        } finally {
+            if (fis != null) {
                 try {
                     fis.close();
                 } catch (IOException e) {
@@ -144,34 +156,35 @@ public class ExcelUtil {
 
     /**
      * 根据workbook对象导出excel
+     *
      * @param workbook workbook对象
      * @param fileName 文件名
-     * @param retList 数据源集合
+     * @param retList  数据源集合
      * @param keyNames 数据源中Map集合的key值 (key值对应的value值顺序要列名顺序一致)
      * @param startRow 开始 循环写入数据 的行数(从第几行开始写入数据)
      * @param response 返回请求
      */
-    public static void exportByWorkbook(HSSFWorkbook workbook,String fileName,List<Map> retList,String[] keyNames,int startRow,HttpServletResponse response){
-        HSSFCellStyle contentStyle = getContentStyle(workbook,XSSFCellStyle.ALIGN_CENTER);
-        HSSFCellStyle leftStyle = getContentStyle(workbook,XSSFCellStyle.ALIGN_LEFT);
+    public static void exportByWorkbook(HSSFWorkbook workbook, String fileName, List<Map> retList, String[] keyNames, int startRow, HttpServletResponse response) {
+        HSSFCellStyle contentStyle = getContentStyle(workbook, XSSFCellStyle.ALIGN_CENTER);
+        HSSFCellStyle leftStyle = getContentStyle(workbook, XSSFCellStyle.ALIGN_LEFT);
         HSSFSheet sheet = workbook.getSheetAt(0);
         int xh = 1;
-        if(!EditUtil.isEmptyOrNull(retList) && retList.size()>0){
-            for(int rowNum=0;rowNum<retList.size();rowNum++){
-                if(!EditUtil.isEmptyOrNull(keyNames) && keyNames.length>0){
-                    for(int colNum=0;colNum<keyNames.length;colNum++){
-                        if("XH".equals(keyNames[colNum])){
-                            setCellValue(sheet,startRow+rowNum,colNum,xh++,contentStyle);
-                        }else if(keyNames[colNum].endsWith("Name")){
-                            setCellValue(sheet,startRow+rowNum,colNum,retList.get(rowNum).get(keyNames[colNum]),leftStyle);
-                        }else{
-                            setCellValue(sheet,startRow+rowNum,colNum,retList.get(rowNum).get(keyNames[colNum]),contentStyle);
+        if (!EditUtil.isEmptyOrNull(retList) && retList.size() > 0) {
+            for (int rowNum = 0; rowNum < retList.size(); rowNum++) {
+                if (!EditUtil.isEmptyOrNull(keyNames) && keyNames.length > 0) {
+                    for (int colNum = 0; colNum < keyNames.length; colNum++) {
+                        if ("XH".equals(keyNames[colNum])) {
+                            setCellValue(sheet, startRow + rowNum, colNum, xh++, contentStyle);
+                        } else if (keyNames[colNum].endsWith("Name")) {
+                            setCellValue(sheet, startRow + rowNum, colNum, retList.get(rowNum).get(keyNames[colNum]), leftStyle);
+                        } else {
+                            setCellValue(sheet, startRow + rowNum, colNum, retList.get(rowNum).get(keyNames[colNum]), contentStyle);
                         }
                     }
                 }
             }
         }
-        setResponseHeader(response,fileName,workbook);
+        setResponseHeader(response, fileName, workbook);
     }
 
     /**
@@ -184,6 +197,7 @@ public class ExcelUtil {
      * @param sheetNames 生成的Sheet页的名称集合
      * @param keyNames   数据源中Map集合的key值 (key值对应的value值顺序要列名顺序一致)
      * @param rowNum     开始 循环写入数据 的行数(从第几行开始写入数据)
+     * @throws Exception IO异常
      */
     public static void ExcelByModel(String ExcelName, String ModelURl, List<Map<String, String>> dataSource,
                                     HttpServletResponse response, String[] sheetNames, String[] keyNames, int rowNum) throws Exception {
@@ -446,7 +460,7 @@ public class ExcelUtil {
      * @param startRow   合并起始行
      * @param startCol   合并起始列
      * @param mergedList 需要合并的行（列）集合
-     * @return
+     * @return List 单元格坐标合并集合
      */
     public static List<CellRangeAddress> getMergedRegions(List<Map<String, Object>> rows,
                                                           List<Map<String, Object>> columns, int startRow, int startCol, Integer[] mergedList) {
@@ -463,7 +477,7 @@ public class ExcelUtil {
         if (!EditUtil.isEmptyOrNull(rows)) {
             for (Map<String, Object> rowMap : rows) {
                 if (!EditUtil.isEmptyOrNull(rowMap.get("mergedRowNum"))) {
-                    mergedRowNum = EditUtil.intPByNullToZero(rowMap.get("mergedRowNum").toString());
+                    mergedRowNum = EditUtil.string2IntOrZero(rowMap.get("mergedRowNum").toString());
                 }
                 if (mergedRowNum != 0) {
                     mergedRowNum = mergedRowNum - 1;
@@ -480,7 +494,7 @@ public class ExcelUtil {
         if (!EditUtil.isEmptyOrNull(columns)) {
             for (Map<String, Object> colMap : columns) {
                 if (!EditUtil.isEmptyOrNull(colMap.get("mergedColNum"))) {
-                    mergedRowNum = EditUtil.intPByNullToZero(colMap.get("mergedColNum").toString());
+                    mergedRowNum = EditUtil.string2IntOrZero(colMap.get("mergedColNum").toString());
                 }
                 if (mergedColNum != 0) {
                     mergedColNum = mergedColNum - 1;
@@ -554,8 +568,8 @@ public class ExcelUtil {
                 for (int j = 0; j < colArr.length; j++) {
                     String colName = colArr[j];
                     HSSFCell cell = row.createCell(j + startCol);
-                    String colValue = EditUtil.objByNullToValue(map.get(colName));
-                    if (!EditUtil.objByNullToValue(map.get("qualicationCode")).startsWith("A")
+                    String colValue = EditUtil.obj2String(map.get(colName));
+                    if (!EditUtil.obj2String(map.get("qualicationCode")).startsWith("A")
                             && "qualicationStdDesc".equalsIgnoreCase(colName)) {
                         cs.setAlignment(HSSFCellStyle.ALIGN_LEFT);
                     } else {
@@ -588,8 +602,8 @@ public class ExcelUtil {
     /**
      * 将多个workbook添加到一个压缩流中
      *
-     * @param zos
-     * @param wbMap
+     * @param zos   压缩流
+     * @param wbMap Workbook对象集合
      */
     public static void zipWorkbook(ZipOutputStream zos, Map<String, Workbook> wbMap) {
         if (!EditUtil.isEmptyOrNull(wbMap)) {
@@ -615,7 +629,7 @@ public class ExcelUtil {
     /**
      * 获取workbook的二进制数据
      *
-     * @param workbook
+     * @param workbook workbook对象
      * @return byte[]
      */
     public static byte[] getByteByWorkbook(Workbook workbook) {
@@ -639,8 +653,9 @@ public class ExcelUtil {
     /**
      * 根据单元格的类型获取单元格值
      *
-     * @param row
-     * @return
+     * @param row    行对象
+     * @param colNum 第几列
+     * @return String
      */
     public static String getColValue(Row row, int colNum) {
         String cellValue = "";
@@ -656,8 +671,8 @@ public class ExcelUtil {
     /**
      * 根据单元格的类型获取单元格值
      *
-     * @param cell
-     * @return
+     * @param cell 单元格对象
+     * @return String
      */
     public static String getColValue(Cell cell) {
         String colStr = "";
@@ -700,6 +715,14 @@ public class ExcelUtil {
         return colStr;
     }
 
+    /**
+     * 设置指定单元格内容
+     *
+     * @param row           行
+     * @param colNum        第几列
+     * @param value         填入的内容
+     * @param hssfCellStyle 样式
+     */
     public static void setCellValue(Row row, int colNum, Object value, HSSFCellStyle hssfCellStyle) {
         if (!EditUtil.isEmptyOrNull(row)) {
             Cell cell = row.getCell(colNum);
@@ -707,20 +730,35 @@ public class ExcelUtil {
                 cell = row.createCell(colNum);
             }
             cell.setCellStyle(hssfCellStyle);
-            cell.setCellValue(EditUtil.objByNullToValue(value));
+            cell.setCellValue(EditUtil.obj2String(value));
         }
     }
 
+    /**
+     * 设置指定单元格内容
+     *
+     * @param row    行
+     * @param colNum 第几列
+     * @param value  值
+     */
     public static void setCellValue(Row row, int colNum, Object value) {
         if (!EditUtil.isEmptyOrNull(row)) {
             Cell cell = row.getCell(colNum);
             if (EditUtil.isEmptyOrNull(cell)) {
                 cell = row.createCell(colNum);
             }
-            cell.setCellValue(EditUtil.objByNullToValue(value));
+            cell.setCellValue(EditUtil.obj2String(value));
         }
     }
 
+    /**
+     * 设置指定单元格内容
+     *
+     * @param sheet  sheet对象
+     * @param rowNum 行号
+     * @param colNum 列号
+     * @param value  值
+     */
     public static void setCellValue(HSSFSheet sheet, int rowNum, int colNum, Object value) {
         if (!EditUtil.isEmptyOrNull(sheet)) {
             Row row = sheet.getRow(rowNum);
@@ -731,16 +769,34 @@ public class ExcelUtil {
         }
     }
 
-    public static void setCellValue(HSSFSheet sheet, int rowNum, int colNum, Object value,HSSFCellStyle hssfCellStyle) {
+    /**
+     * 设置指定单元格内容
+     *
+     * @param sheet         sheet对象
+     * @param rowNum        行号
+     * @param colNum        列号
+     * @param value         值
+     * @param hssfCellStyle 样式
+     */
+    public static void setCellValue(HSSFSheet sheet, int rowNum, int colNum, Object value, HSSFCellStyle hssfCellStyle) {
         if (!EditUtil.isEmptyOrNull(sheet)) {
             Row row = sheet.getRow(rowNum);
             if (EditUtil.isEmptyOrNull(row)) {
                 row = sheet.createRow(rowNum);
             }
-            setCellValue(row,colNum,value,hssfCellStyle);
+            setCellValue(row, colNum, value, hssfCellStyle);
         }
     }
 
+    /**
+     * 设置指定单元格内容
+     *
+     * @param workbook workbook对象
+     * @param value    值
+     * @param sheetNum 序号
+     * @param rowNum   行号
+     * @param colNum   列号
+     */
     public static void setCellValue(Workbook workbook, Object value, int sheetNum, int rowNum, int colNum) {
         if (!EditUtil.isEmptyOrNull(workbook)) {
             HSSFSheet sheet = (HSSFSheet) workbook.getSheetAt(sheetNum);
@@ -748,22 +804,6 @@ public class ExcelUtil {
                 setCellValue(sheet, rowNum, colNum, value);
             }
         }
-    }
-
-    /**
-     * 获取导入成功的条数
-     *
-     * @param a
-     * @return long
-     */
-    public static long getSuccessCount(int[] a) {
-        long count = 0;
-        if (!EditUtil.isEmptyOrNull(a)) {
-            for (int i : a) {
-                count += i;
-            }
-        }
-        return count;
     }
 
     /**
@@ -782,40 +822,18 @@ public class ExcelUtil {
         sheet.removeRow(sheet.getRow(lastRowNum));
     }
 
-    /**
-     * 获取导入失败的条数
-     *
-     * @param a
-     * @return long
-     */
-    public static long getFailCount(int[] a) {
-        long count = 0;
-        if (!EditUtil.isEmptyOrNull(a)) {
-            for (int i : a) {
-                if (i == 0) {
-                    count += 1;
-                }
-            }
-        }
-        return count;
-    }
-
-    public static String getUUID() {
-        return UUID.randomUUID().toString().replaceAll("-", "").toUpperCase();
-    }
-
 //    以下是HSSF导出excel方式******************************************************************************************************
 
     /**
      * HSSF创建导出excel功能
      *
-     * @param response
+     * @param response  响应对象
      * @param sheetName sheet名
      * @param fileName  excel文件名
      * @param title     excel标题
      * @param retList   查询出来的数据集
      * @param dateKey   excel数据
-     * @param wb
+     * @param wb        HSSFWorkbook 对象
      */
     public static void getHSSFWorkbook(HttpServletResponse response, String sheetName, String fileName, String[] title,
                                        List<Map> retList, Object[] dateKey, HSSFWorkbook wb) {
@@ -876,7 +894,7 @@ public class ExcelUtil {
     }
 
     //数据格式化
-    public static Object[][] dataFormat(List<Map> retList, String[] title, Object[] dateKey) {
+    private static Object[][] dataFormat(List<Map> retList, String[] title, Object[] dateKey) {
         Map<String, Object> date = new HashMap<>();
         Object[][] content = new Object[retList.size()][];
         for (int i = 0; i < retList.size(); i++) {
@@ -890,7 +908,7 @@ public class ExcelUtil {
     }
 
     // io流
-    public static void setResponseHeader(HttpServletResponse response, String fileName, HSSFWorkbook wb) {
+    private static void setResponseHeader(HttpServletResponse response, String fileName, HSSFWorkbook wb) {
         try {
             try {
                 fileName = new String(fileName.getBytes(), "ISO8859-1");
@@ -912,7 +930,7 @@ public class ExcelUtil {
     }
 
     //表头样式设置
-    public static HSSFCellStyle getHeadStyle(HSSFWorkbook workbook) {
+    private static HSSFCellStyle getHeadStyle(HSSFWorkbook workbook) {
         // 表头
         HSSFCellStyle fontStyle = workbook.createCellStyle();
         HSSFFont font1 = workbook.createFont();
@@ -929,7 +947,7 @@ public class ExcelUtil {
     }
 
     //内容样式设置
-    public static HSSFCellStyle getBodyStyle(HSSFWorkbook workbook) {
+    private static HSSFCellStyle getBodyStyle(HSSFWorkbook workbook) {
         // 内容
         HSSFCellStyle fontStyle2 = workbook.createCellStyle();
         HSSFFont font2 = workbook.createFont();
