@@ -1,7 +1,9 @@
 package org.budgiant.common.utils;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Map;
@@ -72,6 +74,67 @@ public class EditUtil {
         } else {
             return 0;
         }
+    }
+
+    /**
+     * MD5方法
+     *
+     * @param text 明文
+     * @param key  密钥
+     * @return 密文
+     */
+    public static String md5(String text, String key) {
+        //加密后的字符串
+        return DigestUtils.md5Hex(text + key);
+    }
+
+    /**
+     * MD5方法
+     *
+     * @param text 明文
+     * @return 密文
+     */
+    public static String md5(String text) {
+        //加密后的字符串
+        return DigestUtils.md5Hex(text);
+    }
+
+    /**
+     * MD5验证方法
+     *
+     * @param text 明文
+     * @param key  密钥
+     * @param md5  密文
+     * @return true/false
+     */
+    public static boolean verifyMd5(String text, String key, String md5) {
+        //根据传入的密钥进行验证
+        String md5Text = md5(text, key);
+        return md5Text.equalsIgnoreCase(md5);
+    }
+
+    /**
+     * 获取请求IP地址
+     *
+     * @param request 网络请求
+     * @return String
+     */
+    public static String getIP(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (!EditUtil.isEmptyOrNull(ip) && !"unKnown".equalsIgnoreCase(ip)) {
+            //多次反向代理后会有多个ip值，第一个ip才是真实ip
+            int index = ip.indexOf(",");
+            if (index != -1) {
+                return ip.substring(0, index);
+            } else {
+                return ip;
+            }
+        }
+        ip = request.getHeader("X-Real-IP");
+        if (!EditUtil.isEmptyOrNull(ip) && !"unKnown".equalsIgnoreCase(ip)) {
+            return ip;
+        }
+        return request.getRemoteAddr();
     }
 
 }
