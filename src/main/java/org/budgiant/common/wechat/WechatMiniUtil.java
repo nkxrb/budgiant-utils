@@ -1,9 +1,14 @@
-package org.budgiant.common.utils;
+package org.budgiant.common.wechat;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.codec.binary.Base64;
+import org.budgiant.common.utils.EditUtil;
+import org.budgiant.common.utils.FileUtils;
+import org.budgiant.common.utils.HttpUtil;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -16,53 +21,27 @@ import java.util.Map;
  * @author nkxrb
  * @since 2019/5/22
  */
-public class WxMiniUtil {
-    /**
-     * 小程序appid
-     */
-    private static String WXMINI_APPID;
-    /**
-     * 小程序密钥凭证
-     */
-    private static String WXMINI_APPSECRET;
-    /**
-     * 微信小程序获取token请求地址
-     **/
-    private static String WXMINI_API_AUTH = "https://api.weixin.qq.com/sns/jscode2session";
-    /**
-     * 微信小程序获取token请求地址
-     **/
-    private static String WXMINI_API_TOKEN = "https://api.weixin.qq.com/cgi-bin/token";
-    /**
-     * 微信小程序生成有限个小程序码请求地址
-     **/
-    private static String WXMINI_API_GETWXACODE = "https://api.weixin.qq.com/wxa/getwxacode";
-    /**
-     * 微信小程序生成无限个小程序码请求地址
-     **/
-    private static String WXMINI_API_GETUNLIMITED = "https://api.weixin.qq.com/wxa/getwxacodeunlimit";
+@Component
+public class WechatMiniUtil {
+
+    private final WechatPropertiesConfig wechatPropertiesConfig;
+    private static WechatPropertiesConfig initProperties;
+
+    private WechatMiniUtil(WechatPropertiesConfig wechatPropertiesConfig) {
+        this.wechatPropertiesConfig = wechatPropertiesConfig;
+    }
+
+    @PostConstruct
+    public void init() {
+        //启动时加载配置文件中的配置信息
+        initProperties = this.wechatPropertiesConfig;
+    }
+
     /**
      * 临时文件保存路径
      **/
     private static String WXMINI_QRCODE_FILE_PATH = "/tmp/wxqrcodetmp/";
 
-    /**
-     * 设置微信小程序的appId
-     *
-     * @param wxminiAppid 小程序的appId
-     */
-    public static void setWxminiAppid(String wxminiAppid) {
-        WXMINI_APPID = wxminiAppid;
-    }
-
-    /**
-     * 设置微信小程序密钥
-     *
-     * @param wxminiAppsecret 小程序密钥
-     */
-    public static void setWxminiAppsecret(String wxminiAppsecret) {
-        WXMINI_APPSECRET = wxminiAppsecret;
-    }
 
     /**
      * 获取小程序全局唯一后台接口调用凭据access_token
@@ -71,7 +50,7 @@ public class WxMiniUtil {
      */
     public static String getAccessToken() {
         //获取小程序全局唯一后台接口调用凭据access_token
-        String tokenJson = HttpUtil.sendGet(WXMINI_API_TOKEN + "?grant_type=client_credential&appid=" + WXMINI_APPID + "&secret=" + WXMINI_APPSECRET);
+        String tokenJson = HttpUtil.sendGet(initProperties.getWxminiApiToken() + "?grant_type=client_credential&appid=" + initProperties.getWxminiAppid() + "&secret=" + initProperties.getWxminiAppSecret());
         JSONObject jsonObject = JSON.parseObject(tokenJson);
         if (!EditUtil.isEmptyOrNull(jsonObject) && !EditUtil.isEmptyOrNull(jsonObject.getString("access_token"))) {
             return jsonObject.getString("access_token");
@@ -93,7 +72,7 @@ public class WxMiniUtil {
         params.put("page", page);
         params.put("scene", paramCode);
         params.put("width", 430);
-        return postFileBase64(WXMINI_API_GETUNLIMITED + "?access_token=" + accessToken, params, filePath);
+        return postFileBase64(initProperties.getWxminiApiGetUnlimited() + "?access_token=" + accessToken, params, filePath);
     }
 
     /**
@@ -104,8 +83,9 @@ public class WxMiniUtil {
      * @return
      */
     public static String createQrcode(String accessToken, String filePath, Map<String, Object> paramMap) {
-        return postFileBase64(WXMINI_API_GETWXACODE + "?access_token=" + accessToken, paramMap, filePath);
+        return postFileBase64(initProperties.getWxminiApiGetwxacode() + "?access_token=" + accessToken, paramMap, filePath);
     }
+
 
     /**
      * post请求返回将文件的byte[]转义为base64编码格式的字符串
