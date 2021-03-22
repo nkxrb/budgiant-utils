@@ -45,7 +45,7 @@
         <commons-io.version>2.6</commons-io.version>
         <poi-ooxml.version>3.12</poi-ooxml.version>
         <jsch.version>0.1.53</jsch.version>
-        <xstream.version>1.4.11</xstream.version>
+        <xstream.version>1.4.16</xstream.version>
         <jdom.version>2.0.2</jdom.version>
     </properties>
 
