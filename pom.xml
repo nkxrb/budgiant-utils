@@ -44,7 +44,7 @@
         <commons-fileupload.version>1.3.3</commons-fileupload.version>
         <commons-io.version>2.6</commons-io.version>
         <poi-ooxml.version>3.12</poi-ooxml.version>
-        <jsch.version>0.1.53</jsch.version>
+        <jsch.version>0.1.54</jsch.version>
         <xstream.version>1.4.11</xstream.version>
         <jdom.version>2.0.2</jdom.version>
     </properties>
